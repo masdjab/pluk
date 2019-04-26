@@ -25,7 +25,7 @@ class Users < Pluk::TableAdapter
 end
 
 
-cn = Pluk::Connection.new(hots: "localhost", username: "root", password: "", database: "pluk-test")
+cn = Pluk::Connection.new(host: "localhost", username: "root", password: "", database: "pluk-test")
 uu = Users.new(cn)
 
 # retrieve all users (return array):
