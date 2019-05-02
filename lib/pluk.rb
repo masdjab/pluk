@@ -251,7 +251,7 @@ module Pluk
       end
     end
     def get_table_list(database = nil)
-      tt = database ? " FROM #{database.to_s}" : ""
+      tt = database ? " FROM `#{database.to_s}`" : ""
       self.query("SHOW TABLES#{tt}").map{|x|x[x.keys[0]]}
     end
     def get_database_list(name = "", match_pattern = false)

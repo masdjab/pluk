@@ -1,0 +1,1 @@
+- connection fail do not need to wait until 10 secs
