@@ -5,8 +5,8 @@
 require 'mysql2'
 
 module Pluk
-  Version   = "1.0.0.13"
-  BuildDate = "190423c"
+  Version   = "1.0.0.15"
+  BuildDate = "190509a"
   
   class SQLFunction
     def initialize(expr)
@@ -370,12 +370,12 @@ module Pluk
         kk = 
           extract_words(@search_keywords, " ")
           .map{|x|"(keywords LIKE '%#{escape(x)}%')"}
-        hh = ([@having] + kk).join(" AND ")
+        hh = ([@having] + kk).select{|x|!x.empty?}.join(" AND ")
       else
         hh = @having
       end
       
-      !hh.empty? ? "#{make_clause(clause)}#{hh}" : ""
+      (!hh.empty? ? "#{make_clause(clause)}#{hh}" : "")
     end
     def sql_order_by(clause = "ORDER BY")
       !@order_by.empty? ? "#{make_clause(clause)}#{@order_by}" : ""

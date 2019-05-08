@@ -1,1 +1,2 @@
 - connection fail do not need to wait until 10 secs
+- get database list, get table list must use `` (to support database names containing "-")
