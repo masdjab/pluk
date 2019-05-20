@@ -6,8 +6,8 @@
 
 Gem::Specification.new do |s|
   s.name        = 'pluk'
-  s.version     = '1.0.0.15'
-  s.date        = '2019-05-09'
+  s.version     = '1.0.0.17'
+  s.date        = '2019-05-18'
   s.summary     = 'Simple MySQL ORM'
   s.description = ''
   s.author      = 'Heryudi Praja'

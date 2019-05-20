@@ -5,8 +5,8 @@
 require 'mysql2'
 
 module Pluk
-  Version   = "1.0.0.15"
-  BuildDate = "190509a"
+  Version   = "1.0.0.17"
+  BuildDate = "190518b"
   
   class SQLFunction
     def initialize(expr)
@@ -29,6 +29,8 @@ module Pluk
         "NULL"
       elsif @value.is_a?(Time)
         "\"#{@value.strftime("%Y-%m-%d %H:%M:%S")}\""
+      elsif @value.is_a?(String)
+        "'#{Mysql2::Client.escape(@value)}'"
       else
         "\"#{@value}\""
       end
@@ -282,9 +284,6 @@ module Pluk
   
   class QueryParams
     private
-    def initialize(conn)
-      @connection = conn
-    end
     def escape(text)
       Mysql2::Client.escape(text)
     end
@@ -301,9 +300,7 @@ module Pluk
       :group_by, :having, :order_by, :offset, :limit
     
     private
-    def initialize(conn, options = {})
-      super(conn)
-      
+    def initialize(options = {})
       oo                    = options || {}
       self.search_fields    = oo.delete(:search_fields){|k|""}
       self.search_keywords  = oo.delete(:keywords){|k|""}
@@ -426,7 +423,7 @@ module Pluk
         a
       end
     end
-    def make_hash(*args)
+    def combine_hash(*args)
       args.inject{|a,b|a = (a ? a : {}).merge(b ? b : {});a}
     end
     
@@ -497,7 +494,7 @@ module Pluk
       
       
       # create SelectParams
-      SelectParams.new(@connection, options)
+      SelectParams.new(options)
     end
     def select_all(filter = "", options = {})
       @connection.query(select_query(select_params(filter, options)))
@@ -512,7 +509,7 @@ module Pluk
       select_all(filter, options)
     end
     def first(filter = "", options = {})
-      rr = all(filter, make_hash(options, limit: 1))
+      rr = all(filter, combine_hash(options, limit: 1))
       !rr.empty? ? rr[0] : nil
     end
     def load(filter, options = {})
@@ -526,9 +523,9 @@ module Pluk
       
       f, v = [], []
       
-      data.keys.each do |k|
-        f << "`#{k}`"
-        v << SQLValue.new(data[k]).sql_value_syntax
+      data.each do |x, y|
+        f << "`#{x}`"
+        v << SQLValue.new(y).sql_value_syntax
       end
       
       @connection.query(
@@ -547,8 +544,8 @@ module Pluk
       end
       
       sc = 
-        data.keys
-        .map{|k| "`#{k}` = #{SQLValue.new(data[k]).sql_value_syntax}"}
+        data
+        .map{|k,v| "`#{k}` = #{SQLValue.new(v).sql_value_syntax}"}
         .join(", ")
       
       @connection.query(
