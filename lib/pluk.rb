@@ -5,8 +5,8 @@
 require 'mysql2'
 
 module Pluk
-  Version   = "1.0.0.17"
-  BuildDate = "190518b"
+  Version   = "1.0.0.18"
+  BuildDate = "190528a"
   
   class SQLFunction
     def initialize(expr)
@@ -392,6 +392,31 @@ module Pluk
   end
   
   
+  class DefaultOutputter
+    def output(items)
+      items
+    end
+  end
+  
+  
+  class ObjectOutputter
+    attr_reader :output_type
+    def initialize(output_type)
+      @output_type = output_type
+    end
+    def output(items)
+      items.map do |r|
+        tmp = @output_type.new
+        r.keys.each do |k|
+          mm = :"#{k}="
+          tmp.__send__(mm, r[k]) if tmp.respond_to?(mm)
+        end
+        tmp
+      end
+    end
+  end
+  
+  
   class QueryAdapter
     attr_accessor :field_maps
     attr_reader   :connection, :table_name, :column_hash
@@ -401,6 +426,7 @@ module Pluk
       @connection = connection
       @table_name = table_name
       @column_hash = @connection.get_field_list(@table_name).inject({}){|a,b|a[b.name] = b; a}
+      @outputter = DefaultOutputter.new
       @field_maps = {}
     end
     def sym_keys(h)
@@ -506,11 +532,10 @@ module Pluk
       self.count == 0
     end
     def all(filter = "", options = {})
-      select_all(filter, options)
+      @outputter.output select_all(filter, options)
     end
     def first(filter = "", options = {})
-      rr = all(filter, combine_hash(options, limit: 1))
-      !rr.empty? ? rr[0] : nil
+      all(filter, combine_hash(options, limit: 1)).first
     end
     def load(filter, options = {})
       first(filter, options)
@@ -583,28 +608,15 @@ module Pluk
     def initialize(connection, table_name, output_type = nil, calc_found_rows = false)
       super(connection, table_name)
       @output_type = output_type
+      @outputter = ObjectOutputter.new(@output_type) if !@output_type.nil?
       @calc_found_rows = calc_found_rows
       @found_rows = -1
     end
     def all(filter = "", options = {})
       @found_rows = -1
-      
       rows = super(filter, options)
-      
       @found_rows = @connection.scalar("SELECT FOUND_ROWS()") if @calc_found_rows
-      
-      if !@output_type.nil?
-        rows.map do |r|
-          tmp = @output_type.new
-          r.keys.each do |k|
-            mm = :"#{k}="
-            tmp.__send__(mm, r[k]) if tmp.respond_to?(mm)
-          end
-          tmp
-        end
-      else
-        rows
-      end
+      rows
     end
     def load_to(target, filter = "", options = {})
       if @output_type.nil?
