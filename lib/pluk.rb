@@ -5,8 +5,8 @@
 require 'mysql2'
 
 module Pluk
-  Version   = "1.0.0.18"
-  BuildDate = "190528a"
+  Version   = "1.0.0.19"
+  BuildDate = "190601a"
   
   class SQLFunction
     def initialize(expr)
@@ -474,7 +474,7 @@ module Pluk
     end
     def map_values(filters, params)
       # convert non-string filters to string array
-      filters + (params.is_a?(Hash) ? map_params(params, @column_hash) : [])
+      filters + (params.is_a?(Hash) ? map_params(params, @column_hash.keys + @field_maps.keys) : [])
     end
     def select_params(filter = "", options = {})
       # usage examples:
@@ -486,7 +486,6 @@ module Pluk
       # select_params(id_customer: 1, limit: 20)
       # select_params(id_customer: 1, having: "(f_data = 1)", offset: 20, limit: 10)
       # select_params(id_customer: 1, having: {f_data: 1}, offset: 20, limit: 10)
-      
       
       # convert filter to string
       options, filter = filter, "" if filter.is_a?(Hash)
