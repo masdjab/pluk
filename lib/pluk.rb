@@ -5,8 +5,8 @@
 require 'mysql2'
 
 module Pluk
-  Version   = "1.0.0.19"
-  BuildDate = "190601a"
+  Version   = "1.0.0.20"
+  BuildDate = "190604a"
   
   class SQLFunction
     def initialize(expr)
@@ -172,7 +172,7 @@ module Pluk
         rt = e.query(c)
         
         begin
-          @last_id = e.last_id if e.last_id
+          @last_id = e.last_id if !e.last_id.nil? && e.last_id > 0
           @affected_rows = e.affected_rows if e.affected_rows
         rescue
         end
